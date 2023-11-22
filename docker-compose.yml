@@ -1,0 +1,24 @@
+# {{ ansible_managed }}
+version: '3.4'
+
+services:
+  haproxy:
+    image: haproxy:2.6.12
+    container_name: maintenance
+    # Because we are using the network_mode has host to has an increased performance and also to has
+    # correct IPv6 client address, then we need to run the container using 'root' with a lower
+    # security. The alternative is to install docker on host on rootless mode.
+    network_mode: host
+    user: root
+    restart: always
+    volumes:
+      - "./haproxy:/usr/local/etc/haproxy/:ro"
+      - "/var/run/haproxy/:/var/run/haproxy/:rw"
+      - "./certs:/certs/:ro"
+    healthcheck:
+      test: ["CMD", "echo", "''", ">", "/dev/tcp/example.com/80", "&&", "echo", "''", ">", "/dev/tcp/example.com/443", "||", "exit", "1"]
+      start_period: 3s
+      retries: 10
+      interval: 10s
+      timeout: 10s
+
